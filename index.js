@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 // Read the JSON file
-const rawComps = fs.readFileSync('comps.json');
+const rawComps = fs.readFileSync('./comps.json');
 const comps = JSON.parse(rawComps);
 
 console.log(comps);
