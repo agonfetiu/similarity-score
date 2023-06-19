@@ -6099,11 +6099,17 @@ const weights = {
   // Add more attribute weights as needed
 };
 
-const similarityScores = calculateSimilarityScore(
-  property1,
-  potentialComps,
-  weights
-);
+const startTime = performance.now();
+
+const similarityScores = calculateSimilarityScore(property1, comps, weights);
+
+const endTime = performance.now();
+
+// Calculate the elapsed time in milliseconds
+const elapsedTime = endTime - startTime;
+
+console.log(`Operation completed in ${elapsedTime} milliseconds.`);
+
 console.log('Similarity Scores:');
 similarityScores.forEach((score, index) => {
   console.log(`Comp ${index + 1}: ${score}`);
