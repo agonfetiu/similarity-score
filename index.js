@@ -1,13 +1,14 @@
 const haversine = require('haversine-distance');
 
 class Property {
-    constructor(name, lat, lng, ner, walkscore, constructionType) {
+    constructor(name, lat, lng, ner, walkscore, constructionType, type) {
         this.name = name;
         this.lat = lat;
         this.lng = lng;
         this.ner = ner;
         this.walkscore = walkscore;
         this.constructionType = constructionType;
+        this.type = type || 'comp';
     }
 }
 
@@ -20,7 +21,7 @@ function calculateSimilarity(subject, comp, weights) {
     const loc2 = { lat: comp.lat, lng: comp.lng };
     
     const maxNER = Math.max(subject.ner, comp.ner);
-    const maxWalkscore = Math.max(subject.walkscore, comp.walkscore);
+    const maxWalkscore = Math.max(subject.wlkscore, comp.walkscore);
     
     const physicalDiff = weights.physicalDistance * normalize(haversine(loc1, loc2), 0, maxPhysicalDistance);
     const nerDiff = weights.ner * normalize(Math.abs(subject.ner - comp.ner), 0, maxNER);
@@ -31,13 +32,46 @@ function calculateSimilarity(subject, comp, weights) {
     return similarityScore;
 }
 
-let subjectProperty = new Property("Waterfront Mansions", 50.8503, 4.3517, 1000, 80, 'brick');
-let otherProperties = [
-    new Property("Downtown Heights", 51.2093, 3.2247, 1500, 85, 'concrete'),
-    new Property("Riverside Residences", 51.5074, 0.1278, 1200, 70, 'brick'),
-    new Property("City Center Lofts", 52.5200, 13.4050, 1000, 90, 'brick'),
-    new Property("Test", 50.8503, 4.3517, 1000, 80, 'brick')
-];
+const constructionTypes = ["BTR/SFR", "Garden", "Platform", "Wrap", "Mid-rise", "High-rise"];
+
+
+// Generate random values
+const name = "Subject Property"; // You can also make it random if you want
+const lat = getRandomInRange(-90, 90); // Latitude is in the range of -90 to 90
+const lng = getRandomInRange(-180, 180); // Longitude is in the range of -180 to 180
+const ner = Math.round(getRandomInRange(500, 2000)); // NER is in the range of 500 to 2000
+const walkscore = Math.round(getRandomInRange(10, 100)); // Walkscore is in the range of 10 to 100
+const constructionType = constructionTypes[Math.floor(Math.random() * constructionTypes.length)]; // Select a random construction type
+
+// Create the subject property with the generated values
+let subjectProperty = new Property(name, lat, lng, ner, walkscore, constructionType, 'Subject');
+
+
+// Array of common names
+const commonNames = ["Waterfront Mansions", "Downtown Heights", "Riverside Residences", "City Center Lofts", "Suburban Villas", "Metropolitan Towers", "Cosmopolitan Condos", "Skyline Apartments", "Sunset Gardens", "Lakeside Cottages", "Oceanview Estates", "Mountain Peaks", "Seaside Townhomes", "Parkside Flats", "Highland Suites", "Bayview Complex", "Horizon Hills", "Countryside Communities", "Forest Grove", "Prairie Homes"];
+
+// Array of construction types
+
+// Array to hold properties
+let properties = [];
+
+// Function to generate a random number in a range
+function getRandomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+for(let i = 0; i < 20; i++) {
+    // Generate random values
+    const name = commonNames[i]; // Assign names from the array in order
+    const lat = getRandomInRange(-90, 90); // Latitude is in the range of -90 to 90
+    const lng = getRandomInRange(-180, 180); // Longitude is in the range of -180 to 180
+    const ner = Math.round(getRandomInRange(500, 2000)); // NER is in the range of 500 to 2000
+    const walkscore = Math.round(getRandomInRange(10, 100)); // Walkscore is in the range of 10 to 100
+    const constructionType = constructionTypes[Math.floor(Math.random() * constructionTypes.length)]; // Select a random construction type
+
+    // Create a new property with the generated values and add it to the array
+    properties.push(new Property(name, lat, lng, ner, walkscore, constructionType, 'Comp'));
+}
 
 let weights = {
     physicalDistance: 40,
@@ -48,29 +82,32 @@ let weights = {
 
 // Calculate the max physical distance for normalization
 let maxPhysicalDistance = 0;
-for (let i = 0; i < otherProperties.length; i++) {
+for (let i = 0; i < properties.length; i++) {
     const loc1 = { lat: subjectProperty.lat, lng: subjectProperty.lng };
-    const loc2 = { lat: otherProperties[i].lat, lng: otherProperties[i].lng };
+    const loc2 = { lat: properties[i].lat, lng: properties[i].lng };
     const distance = haversine(loc1, loc2);
     if (distance > maxPhysicalDistance) maxPhysicalDistance = distance;
 }
 
 // Calculate similarity scores and store them along with the properties
-let similarityScores = otherProperties.map(property => {
-    return {
-        property: property,
-        similarity: calculateSimilarity(subjectProperty, property, weights)
-    };
+
+properties.unshift(subjectProperty);
+
+let similarityScores = properties.map(property => {
+  return {
+      'Property Name': property.name,
+      'Similarity (%)': calculateSimilarity(subjectProperty, property, weights).toFixed(2),
+      'Type': property.type,
+      'Location': `(${property.lat}, ${property.lng})`,
+      'NER': property.ner,
+      'Walkscore': property.walkscore,
+      'Construction Type': property.constructionType
+  };
 });
 
 // Sort the scores in descending order
-similarityScores.sort((a, b) => b.similarity - a.similarity);
+similarityScores.sort((a, b) => b['Similarity (%)'] - a['Similarity (%)']);
 
 // Print the results
 console.log("Properties ranked by similarity to the subject property:");
-similarityScores.forEach(score => {
-    console.log(`Property Name: ${score.property.name}`);
-    console.log(`Similarity: ${score.similarity.toFixed(2)}%`);
-    console.log(`Location: (${score.property.lat}, ${score.property.lng}), NER: ${score.property.ner}, Walkscore: ${score.property.walkscore}, Construction Type: ${score.property.constructionType}`);
-    console.log();
-});
+console.table(similarityScores);
