@@ -19,9 +19,10 @@ function normalize(value, min, max) {
 function calculateSimilarity(subject, comp, weights) {
     const loc1 = { lat: subject.lat, lng: subject.lng };
     const loc2 = { lat: comp.lat, lng: comp.lng };
+
     
     const maxNER = Math.max(subject.ner, comp.ner);
-    const maxWalkscore = Math.max(subject.wlkscore, comp.walkscore);
+    const maxWalkscore = Math.max(subject.walkscore, comp.walkscore);
     
     const physicalDiff = weights.physicalDistance * normalize(haversine(loc1, loc2), 0, maxPhysicalDistance);
     const nerDiff = weights.ner * normalize(Math.abs(subject.ner - comp.ner), 0, maxNER);
@@ -29,6 +30,9 @@ function calculateSimilarity(subject, comp, weights) {
     const constructionDiff = (subject.constructionType === comp.constructionType) ? 0 : weights.constructionType;
 
     const similarityScore = (1 - ((physicalDiff + nerDiff + walkscoreDiff + constructionDiff) / 100)) * 100;
+
+    console.log(maxWalkscore)
+
     return similarityScore;
 }
 
